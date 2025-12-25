@@ -6,8 +6,8 @@
 <title>Shapes Actions</title>
 <style>
 :root{--eye:22px;--pupil:8px}
-html,body{height:100%}
-body{margin:0;background:#fff;overflow:hidden}
+html,body{height:100%;background:transparent}
+body{margin:0;background:transparent;overflow:hidden}
 #s{position:relative;height:100vh;display:flex;align-items:flex-end;justify-content:center;padding-bottom:50px}
 
 /* forms */
@@ -161,6 +161,7 @@ body{margin:0;background:#fff;overflow:hidden}
 const P=new URLSearchParams(location.search);
 const ACTION=(P.get("action")||"normal").toLowerCase();
 const CENE=Math.max(1,Math.min(6, +(P.get("cene")||P.get("scene")||1) || 1));
+const SHIFT = +(P.get("shift") || -120); // negativo = vai pra esquerda
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 
 /* mouse */
@@ -322,7 +323,7 @@ function showLoginUI(){kb.style.display="grid";thought.style.display="block";kb.
 /* ✅ central setter that stores current position (prevents teleports) */
 function setElTransform(o, x, y=0){
   o.x=x; o.y=y;
-  o.el.style.transform = `translate(${x}px,${y}px)`;
+  o.el.style.transform = `translate(${x + SHIFT}px,${y}px)`;
 }
 
 /* compute corner shift (same corner used by senha/erro/ok) */
