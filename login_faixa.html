@@ -13,12 +13,20 @@ html,body{
   background:transparent !important;
   overflow:hidden;
 }
-#wrap{position:absolute;inset:0}
 
-/* BASE AZUL */
+/* container */
+#wrap{
+  position:absolute;
+  inset:0;
+}
+
+/* ===== BASE AZUL (NUNCA MUDA) ===== */
 #base{
-  position:absolute; inset:0;
+  position:absolute;
+  inset:0;
+
   --alpha: .8;
+
   background:linear-gradient(90deg,
     rgba(0,45,115,var(--alpha)) 0%,
     rgba(0,45,115,var(--alpha)) 75%,
@@ -27,11 +35,14 @@ html,body{
   );
 }
 
-/* OVERLAY (OK/ERRO) */
+/* ===== OVERLAY (ERRO / OK) ===== */
 #overlay{
-  position:absolute; inset:0;
+  position:absolute;
+  inset:0;
   pointer-events:none;
-  opacity:0;
+
+  opacity:0; /* começa invisível */
+
   background:linear-gradient(90deg,
     rgba(var(--stateRGB),1) 0%,
     rgba(var(--stateRGB),1) 75%,
@@ -40,60 +51,51 @@ html,body{
   );
 }
 
-@keyframes derrete{
-  0%{opacity:0}
-  12%{opacity:1}
-  100%{opacity:0}
+/* animação: surge e DERRETE */
+@keyframes derrete {
+  0%   { opacity:0 }
+  12%  { opacity:1 }
+  100% { opacity:0 }
 }
-.flash{ animation: derrete 4s ease-out 1 both; }
+
+.flash{
+  animation: derrete 4s ease-out 1 forwards;
+}
 </style>
 </head>
 
 <body>
-  <div id="wrap">
-    <div id="base"></div>
-    <div id="overlay"></div>
-  </div>
+<div id="wrap">
+  <div id="base"></div>
+  <div id="overlay"></div>
+</div>
 
 <script>
 const p = new URLSearchParams(location.search);
 
+/* parâmetros */
+const state = (p.get("state") || "normal").toLowerCase();
 let alpha = Number(p.get("alpha") ?? 0.8);
-alpha = Number.isFinite(alpha) ? Math.max(0, Math.min(1, alpha)) : 0.8;
+alpha = Math.max(0, Math.min(1, alpha));
 
-const base = document.getElementById("base");
-const overlay = document.getElementById("overlay");
-base.style.setProperty("--alpha", alpha);
+/* aplica alpha no azul */
+document.getElementById("base")
+  .style.setProperty("--alpha", alpha);
 
-function getState(){
-  // aceita "#erro" "#ok" "#normal"
-  const h = (location.hash || "").replace("#","").trim().toLowerCase();
-  return h || (p.get("state") || "normal").toLowerCase();
+/* define cor do overlay */
+let rgb = null;
+if(state === "erro") rgb = "212,0,0";
+if(state === "ok")   rgb = "0,164,16";
+
+if(rgb){
+  const o = document.getElementById("overlay");
+  o.style.setProperty("--stateRGB", rgb);
+
+  /* rearmar animação sempre */
+  o.classList.remove("flash");
+  void o.offsetWidth;
+  o.classList.add("flash");
 }
-
-function applyState(state){
-  let rgb = null;
-  if(state === "erro") rgb = "212,0,0";
-  if(state === "ok")   rgb = "0,164,16";
-
-  // sempre “limpa” animação
-  overlay.classList.remove("flash");
-
-  if(rgb){
-    overlay.style.setProperty("--stateRGB", rgb);
-    // rearma
-    void overlay.offsetWidth;
-    overlay.classList.add("flash");
-  }
-}
-
-// inicial
-applyState(getState());
-
-// muda sem reload
-window.addEventListener("hashchange", () => {
-  applyState(getState());
-});
 </script>
 </body>
 </html>
