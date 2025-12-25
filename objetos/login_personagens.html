@@ -1,0 +1,685 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Shapes Actions</title>
+<style>
+:root{--eye:22px;--pupil:8px}
+html,body{height:100%;background:transparent}
+body{margin:0;background:transparent;overflow:hidden}
+#s{position:relative;height:100vh;display:flex;align-items:flex-end;justify-content:center;padding-bottom:50px}
+
+/* forms */
+.f{
+  position:relative;
+  will-change:transform;
+  filter:drop-shadow(0 10px 14px rgba(0,0,0,.12));
+  /* defaults (cene=1 fallback) */
+  --w:220px; --h:280px; --c:#C23B3B; --br:0px; --clip:none;
+  --lx:74px; --rx:112px; --ey:0px;
+}
+.body{
+  width:var(--w);
+  height:var(--h);
+  background:var(--c);
+  border-radius:var(--br);
+  clip-path:var(--clip);
+  transform-origin:50% 100%;
+  will-change:transform;
+}
+
+/* stack (blue in front) */
+.red{z-index:1}
+.green{z-index:2}
+.blue{z-index:3}
+
+/* face */
+.face{position:absolute;inset:0;pointer-events:none}
+.eyes{position:absolute;inset:0;will-change:transform}
+.eye{
+  width:var(--eye);height:var(--eye);border-radius:50%;
+  background:#fff;position:absolute;overflow:hidden;
+  box-shadow:inset 0 0 0 2px rgba(0,0,0,.12);
+  transform-origin:50% 50%;
+  top:var(--ey);
+}
+.eye.L{left:var(--lx)}
+.eye.R{left:var(--rx)}
+
+/* pupil (centered correctly) */
+.p{
+  width:var(--pupil);height:var(--pupil);border-radius:50%;
+  background:#111;position:absolute;
+  left:50%;top:50%;
+  transform:translate(-50%,-50%);
+  will-change:transform;
+}
+
+/* blink */
+.eye.blink{animation:blink .14s linear}
+@keyframes blink{0%{transform:scaleY(1)}45%{transform:scaleY(.1)}55%{transform:scaleY(.1)}100%{transform:scaleY(1)}}
+
+/* forced states */
+.eye.closed{animation:none!important;transform:scaleY(.06)}
+.eye.peek{animation:none!important;transform:scaleY(1)}
+
+/* sad expression */
+.eye.sad{
+  animation:none!important;
+  transform:scaleY(.92);
+  filter:saturate(.96);
+}
+.eye::before{
+  content:"";
+  position:absolute;left:-2px;top:-10px;width:calc(100% + 4px);height:18px;
+  background:rgba(255,255,255,.95);
+  transform:translateY(-18px);
+  transition:transform .18s ease;
+}
+.eye.sad::before{ transform:translateY(10px); }
+.eye::after{
+  content:"";
+  position:absolute;left:0;right:0;bottom:0;height:100%;
+  background:radial-gradient(closest-side at 50% 70%, rgba(0,0,0,.14), rgba(0,0,0,0) 60%);
+  opacity:0;
+  transition:opacity .18s ease;
+  pointer-events:none;
+}
+.eye.sad::after{opacity:.55;}
+
+/* login green hop */
+.pop{animation:pop .38s ease}
+@keyframes pop{0%{transform:translateY(0)}40%{transform:translateY(-22px)}100%{transform:translateY(0)}}
+
+/* keyboard */
+#kb{
+  position:absolute;width:240px;height:86px;border-radius:14px;
+  background:rgba(18,22,28,.92);
+  box-shadow:0 14px 26px rgba(0,0,0,.18);
+  display:grid;grid-template-columns:repeat(10,1fr);
+  gap:6px;padding:12px;
+  opacity:0;pointer-events:none;z-index:9999;
+  transform:translate(-50%,14px);
+}
+#kb.show{opacity:1;transform:translate(-50%,0);transition:transform .45s ease,opacity .25s ease}
+.key{border-radius:8px;background:rgba(255,255,255,.10);box-shadow:inset 0 0 0 1px rgba(255,255,255,.10)}
+.key.on{background:rgba(255,255,255,.30);transform:translateY(1px)}
+
+/* thought bubble (only login) */
+#thought{position:absolute;z-index:9998;opacity:0;transform:translate(-50%,0);pointer-events:none}
+#thought.show{opacity:1;transition:opacity .2s ease}
+.bubble{
+  position:relative;min-width:150px;max-width:260px;padding:10px 12px;border-radius:16px;
+  background:rgba(255,255,255,.94);box-shadow:0 10px 18px rgba(0,0,0,.12);
+  font:700 13px/1.2 system-ui,Segoe UI,Arial;color:#1b1f2a;white-space:nowrap;
+}
+.bubble:after{
+  content:"";position:absolute;left:22px;bottom:-8px;width:14px;height:14px;
+  background:rgba(255,255,255,.94);transform:rotate(45deg);box-shadow:0 10px 18px rgba(0,0,0,.06);
+}
+.typing{opacity:.88}
+.cursor{display:inline-block;width:8px;animation:cur .8s steps(1) infinite}
+@keyframes cur{50%{opacity:0}}
+</style>
+</head>
+
+<body>
+<div id="s">
+  <div class="f red" data-base="0">
+    <div class="body"></div>
+    <div class="face"><div class="eyes">
+      <div class="eye L" data-x="74"  data-y="0"><div class="p"></div></div>
+      <div class="eye R" data-x="112" data-y="0"><div class="p"></div></div>
+    </div></div>
+  </div>
+
+  <div class="f blue" data-base="-86">
+    <div class="body"></div>
+    <div class="face"><div class="eyes">
+      <div class="eye L" data-x="74"  data-y="86"><div class="p"></div></div>
+      <div class="eye R" data-x="112" data-y="86"><div class="p"></div></div>
+    </div></div>
+  </div>
+
+  <div class="f green" data-base="-170">
+    <div class="body"></div>
+    <div class="face"><div class="eyes">
+      <div class="eye L" data-x="74"  data-y="52"><div class="p"></div></div>
+      <div class="eye R" data-x="112" data-y="52"><div class="p"></div></div>
+    </div></div>
+  </div>
+
+  <div id="kb"></div>
+  <div id="thought">
+    <div class="bubble"><span id="ttext" class="typing"></span><span class="cursor">▌</span></div>
+  </div>
+</div>
+
+<script>
+/* params */
+const P=new URLSearchParams(location.search);
+const ACTION=(P.get("action")||"normal").toLowerCase();
+const CENE=Math.max(1,Math.min(6, +(P.get("cene")||P.get("scene")||1) || 1));
+const SHIFT = +(P.get("shift") || -120); // negativo = vai pra esquerda
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+
+/* mouse */
+let mx=.5,my=.6;
+addEventListener("mousemove",e=>{mx=e.clientX/innerWidth;my=e.clientY/innerHeight});
+addEventListener("touchmove",e=>{const t=e.touches[0];mx=t.clientX/innerWidth;my=t.clientY/innerHeight},{passive:true});
+
+/* nodes */
+const forms=[...document.querySelectorAll(".f")].map(el=>({
+  el, base:+el.dataset.base,
+  body:el.querySelector(".body"),
+  eyes:el.querySelector(".eyes"),
+  eyeNodes:[...el.querySelectorAll(".eye")],
+  dxF:0,dyF:0,
+  x:+el.dataset.base, y:0
+}));
+const RED=forms[0], BLUE=forms[1], GREEN=forms[2];
+
+const kb=document.getElementById("kb");
+const thought=document.getElementById("thought");
+const ttext=document.getElementById("ttext");
+
+/* build keyboard */
+kb.innerHTML="";
+for(let i=0;i<30;i++){const k=document.createElement("div");k.className="key";kb.appendChild(k)}
+
+/* ===================== 6 CENES (SÓ VISUAL) ===================== */
+const SCENES = [
+  // cene=1 (o original)
+  {
+    red:   {w:220,h:280,c:"#C23B3B", br:"14px", clip:"none",                 lx:74, rx:112, ey:  0},
+    blue:  {w:190,h:230,c:"#2F5AA8", br:"95px 95px 0 0", clip:"none",        lx:74, rx:112, ey: 86},
+    green: {w:250,h:300,c:"#2E8B6D", br:"0px",  clip:"polygon(50% 0%,100% 45%,100% 100%,0 100%,0 45%)", lx:74, rx:112, ey: 52},
+  },
+  // cene=2
+  {
+    red:   {w:215,h:275,c:"#1F4E79", br:"18px", clip:"none",                 lx:72, rx:110, ey:  8},
+    blue:  {w:195,h:235,c:"#0F766E", br:"110px 110px 0 0", clip:"none",      lx:74, rx:112, ey: 86},
+    green: {w:245,h:305,c:"#B45309", br:"10px", clip:"polygon(12% 0%, 88% 0%, 100% 100%, 0% 100%)", lx:74, rx:112, ey: 54},
+  },
+  // cene=3
+  {
+    red:   {w:230,h:285,c:"#334155", br:"10px", clip:"none",                 lx:76, rx:114, ey: 10},
+    blue:  {w:190,h:235,c:"#6D28D9", br:"999px", clip:"none",                lx:74, rx:112, ey: 86},
+    green: {w:255,h:310,c:"#2D6A4F", br:"0px",  clip:"polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)", lx:74, rx:112, ey: 52},
+  },
+  // cene=4
+  {
+    red:   {w:220,h:290,c:"#7C2D12", br:"16px", clip:"none",                 lx:74, rx:112, ey: 12},
+    blue:  {w:200,h:240,c:"#0B7285", br:"100px 100px 0 0", clip:"none",      lx:74, rx:112, ey: 86},
+    green: {w:250,h:315,c:"#1E293B", br:"0px",  clip:"polygon(50% 0%, 100% 30%, 70% 100%, 30% 100%, 0% 30%)", lx:74, rx:112, ey: 50},
+  },
+  // cene=5
+  {
+    red:   {w:225,h:280,c:"#274C77", br:"12px", clip:"none",                 lx:74, rx:112, ey:  8},
+    blue:  {w:190,h:230,c:"#3F6212", br:"95px 95px 0 0", clip:"none",        lx:74, rx:112, ey: 86},
+    green: {w:255,h:305,c:"#8B3A3A", br:"0px",  clip:"polygon(50% 0%,100% 35%,100% 100%,0 100%,0 35%)", lx:74, rx:112, ey: 54},
+  },
+  // cene=6
+  {
+    red:   {w:220,h:285,c:"#0A4D68", br:"14px", clip:"none",                 lx:74, rx:112, ey: 10},
+    blue:  {w:200,h:240,c:"#4C1D95", br:"999px", clip:"none",                lx:74, rx:112, ey: 86},
+    green: {w:250,h:315,c:"#7F1D1D", br:"10px", clip:"polygon(12% 0%, 88% 0%, 100% 100%, 0% 100%)", lx:74, rx:112, ey: 56},
+  },
+];
+
+function applySpec(o, spec){
+  o.el.style.setProperty("--w", spec.w+"px");
+  o.el.style.setProperty("--h", spec.h+"px");
+  o.el.style.setProperty("--c", spec.c);
+  o.el.style.setProperty("--br", spec.br);
+  o.el.style.setProperty("--clip", spec.clip);
+  o.el.style.setProperty("--lx", spec.lx+"px");
+  o.el.style.setProperty("--rx", spec.rx+"px");
+  o.el.style.setProperty("--ey", spec.ey+"px");
+
+  // mantém dataset coerente com seu sistema (importante pro olho não sair do corpo)
+  o.eyeNodes[0].dataset.x = String(spec.lx);
+  o.eyeNodes[1].dataset.x = String(spec.rx);
+  o.eyeNodes[0].dataset.y = String(spec.ey);
+  o.eyeNodes[1].dataset.y = String(spec.ey);
+}
+
+const S = SCENES[CENE-1];
+applySpec(RED,   S.red);
+applySpec(BLUE,  S.blue);
+applySpec(GREEN, S.green);
+
+/* blink (respects closed/sad) */
+function startBlinking(mult=1){
+  document.querySelectorAll(".f").forEach(f=>{
+    const eyes=[...f.querySelectorAll(".eye")];
+    const loop=()=>{
+      eyes.forEach(e=>{
+        if(!e.classList.contains("closed") && !e.classList.contains("sad")){
+          e.classList.add("blink"); setTimeout(()=>e.classList.remove("blink"),140);
+        }
+      });
+      setTimeout(loop,(1800+Math.random()*3200)/mult);
+    };
+    setTimeout(loop,700+Math.random()*1800);
+  });
+}
+
+/* eyes group follow (X full / Y 20%) */
+function moveEyesGroup(o, dx, dy){
+  const br=o.body.getBoundingClientRect();
+  const nx=clamp(dx*2,-1,1), ny=clamp(dy*2,-1,1);
+  const eyeW=22, pad=6;
+
+  const Lx=+o.eyeNodes[0].dataset.x, Rx=+o.eyeNodes[1].dataset.x;
+  const Ey=+o.eyeNodes[0].dataset.y;
+
+  const leftRoom=Lx-pad, rightRoom=(br.width-(Rx+eyeW))-pad;
+  let maxX=Math.max(0,Math.min(leftRoom,rightRoom));
+
+  const upRoom=Ey-pad, downRoom=(br.height-(Ey+eyeW))-pad;
+  let maxY=Math.max(0,Math.min(upRoom,downRoom))*0.20;
+
+  if(o.el.classList.contains("green")) maxX*=0.65;
+
+  o.eyes.style.transform=`translate(${nx*maxX}px,${ny*maxY}px)`;
+}
+
+function movePupilsToPoint(o, px, py){
+  o.eyeNodes.forEach(eye=>{
+    const p=eye.firstElementChild, er=eye.getBoundingClientRect();
+    const ecx=er.left+er.width/2, ecy=er.top+er.height/2;
+    let dx=px-ecx, dy=py-ecy;
+    const d=Math.hypot(dx,dy)||1; dx/=d; dy/=d;
+    const rad=(er.width-8)/2-1;
+    p.style.transform=`translate(-50%,-50%) translate(${dx*rad}px,${dy*rad}px)`;
+  });
+}
+
+/* hard-set peek pose (eyes max left, pupils max right) */
+function setPeekPose(o){
+  const br=o.body.getBoundingClientRect();
+  const eyeW=22, pad=6;
+  const Lx=+o.eyeNodes[0].dataset.x, Rx=+o.eyeNodes[1].dataset.x;
+
+  const leftRoom=Lx-pad;
+  const rightRoom=(br.width-(Rx+eyeW))-pad;
+  let maxX=Math.max(0,Math.min(leftRoom,rightRoom));
+  if(o.el.classList.contains("green")) maxX*=0.65;
+
+  o.eyes.style.transform=`translate(${-maxX}px,0px)`;
+  o.eyeNodes.forEach(eye=>{
+    const p=eye.firstElementChild;
+    const rad=(eyeW-8)/2-1;
+    p.style.transform=`translate(-50%,-50%) translate(${rad}px,0px)`;
+  });
+}
+
+/* helpers */
+function hideUI(){kb.style.display="none";thought.style.display="none";kb.classList.remove("show");thought.classList.remove("show")}
+function showLoginUI(){kb.style.display="grid";thought.style.display="block";kb.classList.add("show");thought.classList.add("show")}
+
+/* ✅ central setter that stores current position (prevents teleports) */
+function setElTransform(o, x, y=0){
+  o.x=x; o.y=y;
+  o.el.style.transform = `translate(${x + SHIFT}px,${y}px)`;
+}
+
+/* compute corner shift (same corner used by senha/erro/ok) */
+let cornerShiftCached=null;
+function computeCornerShift(){
+  if(typeof cornerShiftCached==="number") return cornerShiftCached;
+  forms.forEach(o=>{
+    setElTransform(o, o.base, 0);
+    o.body.style.transform=`scaleY(1) scaleX(1) rotate(0deg)`;
+  });
+  const rr=RED.body.getBoundingClientRect();
+  cornerShiftCached=(10-rr.left);
+  return cornerShiftCached;
+}
+
+/* ===== normal: intro run-in + mouse mode ===== */
+let introStart=0;
+function introNormal(t){
+  if(!introStart) introStart=t;
+  const p=Math.min(1,(t-introStart)/900);
+  const ease=1-Math.pow(1-p,3);
+  forms.forEach((o,i)=>{
+    const off=-560 - i*140;
+    const x=off + (o.base-off)*ease;
+    setElTransform(o, x, 0);
+    o.body.style.transform=`scaleY(1) scaleX(1) rotate(0deg)`;
+    o.eyes.style.transform=`translate(0px,0px)`;
+  });
+  if(p<1) requestAnimationFrame(introNormal);
+  else requestAnimationFrame(tickNormal);
+}
+
+function tickNormal(){
+  forms.forEach(o=>{
+    const br=o.body.getBoundingClientRect();
+    const cx=(br.left+br.width/2)/innerWidth;
+    const cy=(br.top+br.height/2)/innerHeight;
+
+    let dx=mx-cx, dy=my-cy;
+    const dead=.02;
+    if(Math.abs(dx)<dead) dx=0;
+    if(Math.abs(dy)<dead) dy=0;
+
+    o.dxF += (dx-o.dxF)*0.16;
+    o.dyF += (dy-o.dyF)*0.16;
+
+    const tx=clamp(o.dxF*120,-1,1)*12;
+    setElTransform(o, o.base+tx, 0);
+
+    // height scaling without lifting feet
+    const mouseStretch = (0.5 - my) * 0.18;
+    const reactStretch = clamp(-o.dyF, -0.35, 0.35) * 0.10;
+    const sy = clamp(1 + mouseStretch + reactStretch, 0.86, 1.14);
+    const sx = clamp(1 - (sy-1)*0.55, 0.88, 1.12);
+    const tilt = clamp(o.dxF, -0.35, 0.35) * 5;
+
+    o.body.style.transform=`scaleY(${sy}) scaleX(${sx}) rotate(${tilt}deg)`;
+
+    moveEyesGroup(o,o.dxF,o.dyF);
+    movePupilsToPoint(o,mx*innerWidth,my*innerHeight);
+  });
+  requestAnimationFrame(tickNormal);
+}
+
+/* ===== login ===== */
+const loginMsgs=["logando...","senha?","cpf/usuário...","carregando...","opa 😅","vai!","ok!"];
+let curMsg="", idx=0, lastSwap=0;
+function typewriter(t){
+  if(!curMsg || (t-lastSwap)>2600){curMsg=loginMsgs[(Math.random()*loginMsgs.length)|0];idx=0;lastSwap=t}
+  if(idx<curMsg.length && Math.random()<0.45) idx++;
+  ttext.textContent=curMsg.slice(0,idx);
+}
+
+let loginStart=0;
+function tickLogin(t){
+  if(!loginStart) loginStart=t;
+  const prog=Math.min(1,(t-loginStart)/900);
+  const ease=1-Math.pow(1-prog,3);
+
+  setElTransform(RED, RED.base, 0);
+  setElTransform(BLUE, BLUE.base, 0);
+  RED.body.style.transform=BLUE.body.style.transform=`scaleY(1) scaleX(1) rotate(0deg)`;
+
+  const step=120*ease;
+  setElTransform(GREEN, GREEN.base+step, 0);
+  GREEN.body.style.transform=`scaleY(1) scaleX(1) rotate(0deg)`;
+  if(prog<0.25) GREEN.body.classList.add("pop"); else GREEN.body.classList.remove("pop");
+
+  const gbr=GREEN.body.getBoundingClientRect();
+
+  kb.classList.add("show");
+  kb.style.left=(gbr.left+gbr.width*0.62)+"px";
+  kb.style.top =(gbr.top +gbr.height*0.82 + (1-ease)*26)+"px";
+
+  thought.classList.add("show");
+  thought.style.left=(gbr.left+gbr.width*0.52)+"px";
+  thought.style.top =(gbr.top +gbr.height*0.02)+"px";
+  typewriter(t);
+
+  const kbr=kb.getBoundingClientRect();
+  const kx=kbr.left+kbr.width*0.55, ky=kbr.top+kbr.height*0.35;
+
+  const phase=t/1000;
+  const lookKeyboard=(Math.sin(phase*1.6)>0);
+  const tgtR = lookKeyboard ? {x:kx,y:ky} : {x:gbr.left+gbr.width*0.56,y:gbr.top+gbr.height*0.22};
+  const tgtB = lookKeyboard ? {x:gbr.left+gbr.width*0.56,y:gbr.top+gbr.height*0.22} : {x:kx,y:ky};
+
+  function gazeTo(o, tx, ty){
+    const br=o.body.getBoundingClientRect();
+    const cx=(br.left+br.width/2)/innerWidth;
+    const cy=(br.top+br.height/2)/innerHeight;
+    const dx=(tx/innerWidth)-cx, dy=(ty/innerHeight)-cy;
+    o.dxF += (dx-o.dxF)*0.18;
+    o.dyF += (dy-o.dyF)*0.18;
+    moveEyesGroup(o,o.dxF,o.dyF);
+    movePupilsToPoint(o,tx,ty);
+  }
+
+  gazeTo(RED, tgtR.x, tgtR.y);
+  gazeTo(BLUE,tgtB.x, tgtB.y);
+  gazeTo(GREEN,kx + Math.sin(phase*12)*5, ky + Math.cos(phase*10)*2);
+
+  const keys=[...kb.children];
+  if(Math.random()<0.18){
+    const i=(Math.random()*keys.length)|0;
+    keys[i].classList.add("on");
+    setTimeout(()=>keys[i].classList.remove("on"), 70+Math.random()*90);
+  }
+
+  requestAnimationFrame(tickLogin);
+}
+
+/* ===== senha ===== */
+let senhaStart=0, cornerShift=null, peekLock=0, peeking=0;
+function tickSenha(t){
+  if(!senhaStart) senhaStart=t;
+
+  if(cornerShift===null){
+    const cs=computeCornerShift();
+    cornerShift=cs;
+  }
+  cornerShiftCached=cornerShift;
+
+  const p=Math.min(1,(t-senhaStart)/720);
+  const ease=1-Math.pow(1-p,3);
+
+  const squeeze={red:0, blue:-168, green:-305};
+  const baseX = RED.base + cornerShift*ease;
+
+  setElTransform(RED,   baseX + squeeze.red,   0);
+  setElTransform(BLUE,  baseX + squeeze.blue,  0);
+  setElTransform(GREEN, baseX + squeeze.green, 0);
+
+  const crouch=clamp(1 - 0.06*ease, 0.90, 1);
+  forms.forEach(o=>{
+    o.body.style.transform=`scaleY(${crouch}) scaleX(${1+(1-crouch)*0.25}) rotate(0deg)`;
+    if(!peeking){
+      o.eyes.style.transform=`translate(0px,0px)`;
+      o.eyeNodes.forEach(e=>{
+        e.classList.add("closed"); e.classList.remove("peek"); e.classList.remove("sad");
+        e.firstElementChild.style.transform="translate(-50%,-50%) translate(0px,0px)";
+      });
+    }
+  });
+
+  if(t>senhaStart+900 && !peeking && t>peekLock && Math.random()<0.028){
+    peekLock=t+2500+Math.random()*1500;
+    peeking=1;
+
+    const f=forms[(Math.random()*forms.length)|0];
+    const eye=f.eyeNodes[(Math.random()*2)|0];
+
+    forms.forEach(o=>o.eyeNodes.forEach(e=>{e.classList.add("closed");e.classList.remove("peek");e.classList.remove("sad")}));
+
+    eye.classList.remove("closed");
+    eye.classList.add("peek");
+
+    setPeekPose(f);
+
+    setTimeout(()=>{
+      eye.classList.remove("peek");
+      eye.classList.add("closed");
+      peeking=0;
+    }, 2000);
+  }
+
+  requestAnimationFrame(tickSenha);
+}
+
+/* return to senha instantly (no run-in) */
+function startSenhaImmediate(shift){
+  cornerShift = (typeof shift === "number") ? shift : computeCornerShift();
+  cornerShiftCached = cornerShift;
+  senhaStart = performance.now() - 9999; // ease=1
+  peeking=0; peekLock=0;
+  requestAnimationFrame(tickSenha);
+}
+
+/* ===== erro: sad down + "no" with eyes, 2s, return to senha instantly ===== */
+let errStart=0, errCornerShift=null;
+function tickErro(t){
+  if(!errStart) errStart=t;
+
+  if(errCornerShift===null){
+    errCornerShift = (typeof cornerShiftCached==="number") ? cornerShiftCached : computeCornerShift();
+    cornerShiftCached = errCornerShift;
+  }
+
+  const elapsed=t-errStart;
+
+  const squeeze={red:0, blue:-168, green:-305};
+  const baseX = RED.base + errCornerShift;
+
+  setElTransform(RED,   baseX + squeeze.red, 0);
+  setElTransform(BLUE,  baseX + squeeze.blue, 0);
+  setElTransform(GREEN, baseX + squeeze.green, 0);
+
+  const phase=t/1000;
+  const slump = 0.93 + 0.01*Math.sin(phase*2.0);
+  const widen = 1 + (1-slump)*0.28;
+  forms.forEach(o=>{
+    o.body.style.transform = `scaleY(${slump}) scaleX(${widen}) rotate(0deg)`;
+  });
+
+  forms.forEach(o=>{
+    o.eyeNodes.forEach(e=>{
+      e.classList.remove("closed","peek");
+      e.classList.add("sad");
+    });
+  });
+
+  const no = Math.sin(phase*7.5) * 0.85;
+  const down = 0.95;
+
+  forms.forEach(o=>{
+    o.dxF += (no - o.dxF)*0.22;
+    o.dyF += (down - o.dyF)*0.18;
+    moveEyesGroup(o, o.dxF, o.dyF);
+  });
+
+  const tgtX = innerWidth*0.10 + Math.sin(phase*7.5)*innerWidth*0.06;
+  const tgtY = innerHeight*0.94;
+  movePupilsToPoint(RED,   tgtX, tgtY);
+  movePupilsToPoint(BLUE,  tgtX, tgtY);
+  movePupilsToPoint(GREEN, tgtX, tgtY);
+
+  if(elapsed>=2000){
+    forms.forEach(o=>o.eyeNodes.forEach(e=>e.classList.remove("sad")));
+    errStart=0; errCornerShift=null;
+    startSenhaImmediate(cornerShiftCached);
+    return;
+  }
+
+  requestAnimationFrame(tickErro);
+}
+
+/* ===== ok: ALWAYS jump from left corner (same as erro) to center then dance ===== */
+let okStart=0, okFrom=null;
+function tickOk(t){
+  if(!okStart){
+    okStart=t;
+    hideUI();
+
+    const squeeze={red:0, blue:-168, green:-305};
+    const cs = computeCornerShift();
+    cornerShiftCached = cs;
+
+    const baseX = RED.base + cs;
+    okFrom = {
+      r: baseX + squeeze.red,
+      b: baseX + squeeze.blue,
+      g: baseX + squeeze.green
+    };
+
+    setElTransform(RED,   okFrom.r, 0);
+    setElTransform(BLUE,  okFrom.b, 0);
+    setElTransform(GREEN, okFrom.g, 0);
+  }
+
+  const elapsed = t - okStart;
+
+  const jumpDur = 700;
+  const p = Math.min(1, elapsed / jumpDur);
+  const ease = 1 - Math.pow(1-p,3);
+
+  const to = { r: RED.base, b: BLUE.base, g: GREEN.base };
+  const jumpH = 70;
+  const y = (p < 1) ? (-Math.sin(p*Math.PI) * jumpH) : 0;
+
+  setElTransform(RED,   okFrom.r + (to.r - okFrom.r)*ease, y);
+  setElTransform(BLUE,  okFrom.b + (to.b - okFrom.b)*ease, y);
+  setElTransform(GREEN, okFrom.g + (to.g - okFrom.g)*ease, y);
+
+  if(p < 1){
+    const sy = 1 + 0.10*Math.sin(p*Math.PI);
+    const sx = 1 - (sy-1)*0.55;
+    forms.forEach(o=>{
+      o.body.style.transform=`scaleY(${sy}) scaleX(${sx}) rotate(0deg)`;
+      o.eyeNodes.forEach(e=>e.classList.remove("closed","sad","peek"));
+    });
+    requestAnimationFrame(tickOk);
+    return;
+  }
+
+  const phase=t/1000;
+  const w=10*Math.sin(phase*6)+6*Math.sin(phase*11.7);
+
+  setElTransform(RED,   RED.base + w, 0);
+  setElTransform(BLUE,  BLUE.base - w*0.7, 0);
+  setElTransform(GREEN, GREEN.base + w*0.4, 0);
+
+  const b1=1 + 0.03*Math.abs(Math.sin(phase*8));
+  const b2=1 + 0.03*Math.abs(Math.sin(phase*9.2));
+  const b3=1 + 0.03*Math.abs(Math.sin(phase*7.6));
+
+  RED.body.style.transform  = `scaleY(${b1}) scaleX(${1-(b1-1)*0.6}) rotate(0deg)`;
+  BLUE.body.style.transform = `scaleY(${b2}) scaleX(${1-(b2-1)*0.6}) rotate(0deg)`;
+  GREEN.body.style.transform= `scaleY(${b3}) scaleX(${1-(b3-1)*0.6}) rotate(0deg)`;
+
+  const center = {x: innerWidth*0.5, y: innerHeight*0.35};
+  function gazeTo(o, tx, ty, s=0.18){
+    const br=o.body.getBoundingClientRect();
+    const cx=(br.left+br.width/2)/innerWidth;
+    const cy=(br.top+br.height/2)/innerHeight;
+    const dx=(tx/innerWidth)-cx, dy=(ty/innerHeight)-cy;
+    o.dxF += (dx-o.dxF)*s;
+    o.dyF += (dy-o.dyF)*s;
+    moveEyesGroup(o,o.dxF,o.dyF);
+    movePupilsToPoint(o,tx,ty);
+  }
+  gazeTo(RED, center.x, center.y);
+  gazeTo(BLUE,center.x, center.y);
+  gazeTo(GREEN,center.x, center.y, 0.16);
+
+  requestAnimationFrame(tickOk);
+}
+
+/* boot */
+startBlinking(ACTION==="login" ? 1.25 : 1);
+
+if(ACTION==="login"){
+  showLoginUI();
+  requestAnimationFrame(tickLogin);
+}else if(ACTION==="senha"){
+  hideUI();
+  requestAnimationFrame(tickSenha);
+}else if(ACTION==="ok"){
+  hideUI();
+  requestAnimationFrame(tickOk);
+}else if(ACTION==="erro"){
+  hideUI();
+  requestAnimationFrame(tickErro);
+}else{
+  hideUI();
+  requestAnimationFrame(introNormal);
+}
+</script>
+</body>
+</html>
