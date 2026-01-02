@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>BILIMA - PROCESSAMENTO DE FATURAS DE ENERGIA</title>
+  <link rel="icon" type="image/png" href="https://pauloprojetos.github.io/bilima/objetos/logo_bilima.png">
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background: #000;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+    }
+
+    .pb-wrap {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;  /* corta o excesso (barra inferior) */
+      position: relative;
+    }
+
+    .pb-frame {
+      width: 100%;
+      height: calc(100% + 62px); /* deixa o BI maior pra baixo */
+      margin-bottom: -62px;      /* empurra pra baixo sem cortar o topo */
+      border: none;
+    }
+
+    /* --- SKELETON --- */
+    .skeleton-overlay {
+      position: absolute;
+      inset: 0;
+      background: #111;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      z-index: 10;
+      overflow: hidden;
+      transition: opacity 0.4s ease;
+    }
+
+    .skeleton-shimmer {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    120deg,
+    #0D274D 0%,      /* escuro */
+    #12376B 25%,     /* principal */
+    #1A4A8E 50%,     /* claro */
+    #12376B 75%,     /* principal */
+    #0D274D 100%     /* escuro */
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  opacity: 0.55;
+}
+
+
+    @keyframes shimmer {
+      0% {
+        background-position: -200% 0;
+      }
+      100% {
+        background-position: 200% 0;
+      }
+    }
+
+    .skeleton-content {
+      position: relative;
+      text-align: center;
+      z-index: 11;
+    }
+
+    .skeleton-logo {
+      width: 240px;
+      max-width: 40vw;
+      margin-bottom: 16px;
+      filter: drop-shadow(0 0 10px #000);
+    }
+
+    .skeleton-text {
+      color: #ddd;
+      font-size: 18px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      opacity: 0.8;
+    }
+  </style>
+</head>
+<body>
+
+<div class="pb-wrap">
+  <!-- Skeleton + Logo -->
+  <div id="skeleton" class="skeleton-overlay">
+    <div class="skeleton-shimmer"></div>
+    <div class="skeleton-content">
+      <img src="https://pauloprojetos.github.io/bilima/objetos/logo_bilima.png" alt="Logo do Setor" class="skeleton-logo">
+      <div class="skeleton-text">Carregando painel...</div>
+    </div>
+  </div>
+
+  <!-- Power BI -->
+  <iframe
+    class="pb-frame"
+    src="https://app.powerbi.com/view?r=eyJrIjoiZWE2ZGI4MWItY2JjNi00OTdmLWI5MTgtMTI0YzU1MzI5OTMxIiwidCI6IjQ2OGE3ZDg3LTM5ZGMtNDk5MC1iN2VjLTFmNjIzNjEwMDI1MiJ9"
+    allowfullscreen="true"
+    onload="hideSkeletonComDelay()">
+  </iframe>
+</div>
+
+<script>
+  function hideSkeletonComDelay() {
+    const sk = document.getElementById('skeleton');
+    if (!sk) return;
+
+    // tempo mínimo extra depois do load do iframe (ajusta se quiser)
+    const delayMs = 1800; // 1.8s
+
+    setTimeout(() => {
+      sk.style.opacity = '0';
+      setTimeout(() => {
+        sk.style.display = 'none';
+      }, 400); // mesmo tempo do transition do CSS
+    }, delayMs);
+  }
+</script>
+
+</body>
+</html>
